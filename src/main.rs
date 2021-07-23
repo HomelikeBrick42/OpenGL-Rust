@@ -1,18 +1,18 @@
 #![allow(dead_code)]
 
 mod vector3;
-use crate::vector3::{ Vector3 };
-
 mod vertex;
-use crate::vertex::{ Vertex };
-
 mod opengl_shader;
+
+use crate::vector3::{ Vector3 };
+use crate::vertex::{ Vertex };
 use crate::opengl_shader::{ OpenGLShader };
 
 extern crate glfw;
-use glfw::{ Context, Key, Action };
-
 extern crate gl;
+extern crate num;
+
+use glfw::{ Context, Key, Action };
 use gl::types::*;
 
 use std::os::raw::{ c_void };

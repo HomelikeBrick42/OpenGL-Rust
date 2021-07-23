@@ -11,6 +11,32 @@ impl<T> Vector3<T> {
     }
 }
 
+impl<T: num::Float> Vector3<T> {
+    pub fn normalized(self) -> Vector3<T> {
+        let length = Vector3::dot(self, self).sqrt();
+        if length > num::zero() {
+            return self / length;
+        }
+        return Vector3::new(num::zero(), num::zero(), num::zero());
+    }
+}
+
+impl<T: std::ops::Add<Output = T> + std::ops::Mul<Output = T>> Vector3<T> {
+    pub fn dot(a: Vector3<T>, b: Vector3<T>) -> T {
+        a.x * b.x + a.y * b.y + a.z * b.z
+    }
+}
+
+impl<T: Copy + std::ops::Sub<Output = T> + std::ops::Mul<Output = T>> Vector3<T> {
+    pub fn cross(a: Vector3<T>, b: Vector3<T>) -> Vector3<T> {
+        Vector3 {
+            x: a.y * b.z - a.z * b.y,
+            y: a.z * b.x - a.x * b.z,
+            z: a.x * b.y - a.y * b.x,
+        }
+    }
+}
+
 impl<T> std::ops::Index<usize> for Vector3<T> {
     type Output = T;
 
