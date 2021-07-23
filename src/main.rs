@@ -1,10 +1,16 @@
 #![allow(dead_code)]
 
+mod vector3;
+use crate::vector3::{ Vector3 };
+
+mod vertex;
+use crate::vertex::{ Vertex };
+
 mod opengl_shader;
 use crate::opengl_shader::{ OpenGLShader };
 
 extern crate glfw;
-use self::glfw::{ Context, Key, Action };
+use glfw::{ Context, Key, Action };
 
 extern crate gl;
 use gl::types::*;
@@ -49,11 +55,10 @@ void main() {
 "#;
 
     let shader = OpenGLShader::new(vertex_shader_source, fragment_shader_source);
-
-    let vertices: [f32; 9] = [
-         0.0,  0.5, 0.0,
-         0.5, -0.5, 0.0,
-        -0.5, -0.5, 0.0,
+    let vertices = [
+        Vertex::new(Vector3::new( 0.0,  0.5, 0.0)),
+        Vertex::new(Vector3::new( 0.5, -0.5, 0.0)),
+        Vertex::new(Vector3::new(-0.5, -0.5, 0.0)),
     ];
 
     let indices: [u32; 3] = [
@@ -67,14 +72,18 @@ void main() {
         vao
     };
 
+    unsafe fn as_void_ptr<T>(v: *const T) -> *const c_void {
+        v as *const c_void
+    }
+
     let vertex_buffer = unsafe {
         let mut vbo = 0;
         gl::GenBuffers(1, &mut vbo);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
         gl::BufferData(
             gl::ARRAY_BUFFER,
-            (vertices.len() * std::mem::size_of::<GLfloat>()) as GLsizeiptr,
-            &vertices[0] as *const f32 as *const c_void,
+            (vertices.len() * std::mem::size_of_val(&vertices[0])) as GLsizeiptr,
+            as_void_ptr(&vertices[0]),
             gl::STATIC_DRAW,
         );
         vbo
@@ -86,16 +95,26 @@ void main() {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo);
         gl::BufferData(
             gl::ELEMENT_ARRAY_BUFFER,
-            (indices.len() * std::mem::size_of::<GLuint>()) as GLsizeiptr,
-            &indices[0] as *const u32 as *const c_void,
+            (indices.len() * std::mem::size_of_val(&indices[0])) as GLsizeiptr,
+            as_void_ptr(&indices[0]),
             gl::STATIC_DRAW,
         );
         ibo
     };
 
+    #[allow(deref_nullptr)]
     unsafe {
+        // Taken from https://stackoverflow.com/questions/40310483/how-to-get-pointer-offset-in-bytes/40310851#40310851
+        macro_rules! offset_of {
+            ($ty:ty, $field:ident) => {
+                //  Undefined Behavior: dereferences a null pointer.
+                //  Undefined Behavior: accesses field outside of valid memory area.
+                &(*(0 as *const $ty)).$field as *const _ as usize
+            }
+        }
+
         gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<GLfloat>() as GLsizei, std::ptr::null());
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<GLfloat>() as GLsizei, offset_of!(Vertex, position) as *const c_void);
     }
 
     while !window.should_close() {
