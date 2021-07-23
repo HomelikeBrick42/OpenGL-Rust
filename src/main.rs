@@ -3,10 +3,16 @@
 mod vector3;
 mod vertex;
 mod opengl_shader;
+mod opengl_vertex_buffer;
+mod opengl_vertex_array;
+mod opengl_index_buffer;
 
 use crate::vector3::{ Vector3 };
 use crate::vertex::{ Vertex };
 use crate::opengl_shader::{ OpenGLShader };
+use crate::opengl_vertex_buffer::{ OpenGLVertexBuffer };
+use crate::opengl_vertex_array::{ OpenGLVertexArray, BufferElement };
+use crate::opengl_index_buffer::{ OpenGLIndexBuffer };
 
 extern crate glfw;
 extern crate gl;
@@ -15,7 +21,6 @@ extern crate num;
 use glfw::{ Context, Key, Action };
 use gl::types::*;
 
-use std::os::raw::{ c_void };
 use std::sync::mpsc::{ Receiver };
 
 fn main() {
@@ -61,61 +66,13 @@ void main() {
         Vertex::new(Vector3::new(-0.5, -0.5, 0.0)),
     ];
 
+    let mut vertex_array = OpenGLVertexArray::new();
+    vertex_array.add_vertex_buffer(OpenGLVertexBuffer::new(&vertices), &[BufferElement::Float3]);
+
     let indices: [u32; 3] = [
         0, 1, 2,
     ];
-
-    let vertex_array = unsafe {
-        let mut vao = 0;
-        gl::GenVertexArrays(1, &mut vao);
-        gl::BindVertexArray(vao);
-        vao
-    };
-
-    unsafe fn as_void_ptr<T>(v: *const T) -> *const c_void {
-        v as *const c_void
-    }
-
-    let vertex_buffer = unsafe {
-        let mut vbo = 0;
-        gl::GenBuffers(1, &mut vbo);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(
-            gl::ARRAY_BUFFER,
-            (vertices.len() * std::mem::size_of_val(&vertices[0])) as GLsizeiptr,
-            as_void_ptr(&vertices[0]),
-            gl::STATIC_DRAW,
-        );
-        vbo
-    };
-
-    let index_buffer = unsafe {
-        let mut ibo = 0;
-        gl::GenBuffers(1, &mut ibo);
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo);
-        gl::BufferData(
-            gl::ELEMENT_ARRAY_BUFFER,
-            (indices.len() * std::mem::size_of_val(&indices[0])) as GLsizeiptr,
-            as_void_ptr(&indices[0]),
-            gl::STATIC_DRAW,
-        );
-        ibo
-    };
-
-    #[allow(deref_nullptr)]
-    unsafe {
-        // Taken from https://stackoverflow.com/questions/40310483/how-to-get-pointer-offset-in-bytes/40310851#40310851
-        macro_rules! offset_of {
-            ($ty:ty, $field:ident) => {
-                //  Undefined Behavior: dereferences a null pointer.
-                //  Undefined Behavior: accesses field outside of valid memory area.
-                &(*(0 as *const $ty)).$field as *const _ as usize
-            }
-        }
-
-        gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<GLfloat>() as GLsizei, offset_of!(Vertex, position) as *const c_void);
-    }
+    let index_buffer = OpenGLIndexBuffer::new(&indices);
 
     while !window.should_close() {
         process_window_events(&mut window, &events);
@@ -123,22 +80,17 @@ void main() {
         unsafe {
             gl::ClearColor(0.1, 0.1, 0.1, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
+        }
 
-            shader.bind();
-            gl::BindVertexArray(vertex_array);
-            gl::BindBuffer(gl::ARRAY_BUFFER, vertex_buffer);
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, index_buffer);
+        shader.bind();
+        vertex_array.bind();
+        index_buffer.bind();
+        unsafe {
             gl::DrawElements(gl::TRIANGLES, indices.len() as GLsizei, gl::UNSIGNED_INT, std::ptr::null());
         }
 
         window.swap_buffers();
         glfw.poll_events();
-    }
-
-    unsafe {
-        gl::DeleteBuffers(1, &index_buffer);
-        gl::DeleteBuffers(1, &vertex_buffer);
-        gl::DeleteVertexArrays(1, &vertex_array);
     }
 }
 

@@ -17,7 +17,7 @@ impl<T: num::Float> Vector3<T> {
         if length > num::zero() {
             return self / length;
         }
-        return Vector3::new(num::zero(), num::zero(), num::zero());
+        return Vector3::default();
     }
 }
 
@@ -33,6 +33,16 @@ impl<T: Copy + std::ops::Sub<Output = T> + std::ops::Mul<Output = T>> Vector3<T>
             x: a.y * b.z - a.z * b.y,
             y: a.z * b.x - a.x * b.z,
             z: a.x * b.y - a.y * b.x,
+        }
+    }
+}
+
+impl<T: num::Num> Default for Vector3<T> {
+    fn default() -> Vector3<T> {
+        Vector3 {
+            x: num::zero(),
+            y: num::zero(),
+            z: num::zero(),
         }
     }
 }

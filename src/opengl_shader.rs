@@ -2,7 +2,7 @@ use gl::types::*;
 use std::ffi::{ CString };
 
 pub struct OpenGLShader {
-    shader_program_id: GLuint,
+    id: GLuint,
 }
 
 impl OpenGLShader {
@@ -35,13 +35,13 @@ impl OpenGLShader {
             gl::DeleteShader(fragment_shader);
 
             return OpenGLShader {
-                shader_program_id: shader_program
+                id: shader_program
             };
         }
     }
 
     pub fn bind(&self) {
-        unsafe { gl::UseProgram(self.shader_program_id); }
+        unsafe { gl::UseProgram(self.id); }
     }
 
     pub fn un_bind(&self) {
@@ -72,6 +72,6 @@ impl OpenGLShader {
 
 impl Drop for OpenGLShader {
     fn drop(&mut self) {
-        unsafe { gl::DeleteProgram(self.shader_program_id); }
+        unsafe { gl::DeleteProgram(self.id); }
     }
 }
