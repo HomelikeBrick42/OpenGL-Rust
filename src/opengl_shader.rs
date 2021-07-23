@@ -1,5 +1,3 @@
-pub use crate::shader::{ Shader };
-
 use gl::types::*;
 use std::ffi::{ CString };
 
@@ -42,6 +40,14 @@ impl OpenGLShader {
         }
     }
 
+    pub fn bind(&self) {
+        unsafe { gl::UseProgram(self.shader_program_id); }
+    }
+
+    pub fn un_bind(&self) {
+        unsafe { gl::UseProgram(0); }
+    }
+
     unsafe fn create_shader(shader_source: &str, shader_type: GLenum) -> GLuint {
         let shader = gl::CreateShader(shader_type);
         let c_string_shader_source = CString::new(shader_source.as_bytes()).unwrap();
@@ -67,15 +73,5 @@ impl OpenGLShader {
 impl Drop for OpenGLShader {
     fn drop(&mut self) {
         unsafe { gl::DeleteProgram(self.shader_program_id); }
-    }
-}
-
-impl Shader for OpenGLShader {
-    fn bind(&self) {
-        unsafe { gl::UseProgram(self.shader_program_id); }
-    }
-
-    fn un_bind(&self) {
-        unsafe { gl::UseProgram(0); }
     }
 }

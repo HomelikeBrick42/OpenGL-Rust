@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
-mod shader;
 mod opengl_shader;
-use crate::opengl_shader::*;
+use crate::opengl_shader::{ OpenGLShader };
 
 extern crate glfw;
 use self::glfw::{ Context, Key, Action };
@@ -49,7 +48,7 @@ void main() {
 }
 "#;
 
-    let shader: &dyn Shader = &OpenGLShader::new(vertex_shader_source, fragment_shader_source);
+    let shader = OpenGLShader::new(vertex_shader_source, fragment_shader_source);
 
     let vertices: [f32; 9] = [
          0.0,  0.5, 0.0,
