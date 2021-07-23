@@ -6,6 +6,8 @@ use self::glfw::{ Context, Key, Action };
 extern crate gl;
 use self::gl::types::*;
 
+use std::os::raw::c_void;
+
 use std::ffi::CString;
 
 use std::sync::mpsc::Receiver;
@@ -96,18 +98,53 @@ void main() {
         shader_program
     };
 
+    let vertices: [f32; 9] = [
+         0.0,  0.5, 0.0,
+         0.5, -0.5, 0.0,
+        -0.5, -0.5, 0.0,
+    ];
+
+    let indices: [u32; 3] = [
+        0, 1, 2,
+    ];
+
     let vertex_array = unsafe {
-        let mut vao: GLuint = 0;
+        let mut vao = 0;
         gl::GenVertexArrays(1, &mut vao);
         gl::BindVertexArray(vao);
         vao
     };
 
-    let vertices: [f32; 9] = [
-    ];
-
     let vertex_buffer = unsafe {
+        let mut vbo = 0;
+        gl::GenBuffers(1, &mut vbo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            (vertices.len() * std::mem::size_of::<GLfloat>()) as GLsizeiptr,
+            &vertices[0] as *const f32 as *const c_void,
+            gl::STATIC_DRAW,
+        );
+        vbo
     };
+
+    let index_buffer = unsafe {
+        let mut ibo = 0;
+        gl::GenBuffers(1, &mut ibo);
+        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ibo);
+        gl::BufferData(
+            gl::ELEMENT_ARRAY_BUFFER,
+            (indices.len() * std::mem::size_of::<GLuint>()) as GLsizeiptr,
+            &indices[0] as *const u32 as *const c_void,
+            gl::STATIC_DRAW,
+        );
+        ibo
+    };
+
+    unsafe {
+        gl::EnableVertexAttribArray(0);
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<GLfloat>() as GLsizei, std::ptr::null());
+    }
 
     while !window.should_close() {
         process_window_events(&mut window, &events);
@@ -115,6 +152,12 @@ void main() {
         unsafe {
             gl::ClearColor(0.1, 0.1, 0.1, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
+
+            gl::UseProgram(shader);
+            gl::BindVertexArray(vertex_array);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vertex_buffer);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, index_buffer);
+            gl::DrawElements(gl::TRIANGLES, indices.len() as GLsizei, gl::UNSIGNED_INT, std::ptr::null());
         }
 
         window.swap_buffers();
@@ -122,6 +165,9 @@ void main() {
     }
 
     unsafe {
+        gl::DeleteBuffers(1, &index_buffer);
+        gl::DeleteBuffers(1, &vertex_buffer);
+        gl::DeleteVertexArrays(1, &vertex_array);
         gl::DeleteProgram(shader);
     }
 }
