@@ -1,8 +1,8 @@
 #[derive(Clone, Copy)]
 pub struct Vector3<T> {
-    x: T,
-    y: T,
-    z: T,
+    pub x: T,
+    pub y: T,
+    pub z: T,
 }
 
 impl<T> Vector3<T> {
