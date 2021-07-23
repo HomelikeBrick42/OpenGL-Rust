@@ -58,7 +58,7 @@ impl OpenGLVertexArray {
         }
     }
 
-    pub fn add_vertex_buffer(&mut self, buffer: OpenGLVertexBuffer, layout: &[BufferElement]) {
+    pub fn add_vertex_buffer<'a>(&'a mut self, buffer: OpenGLVertexBuffer, layout: &[BufferElement]) -> &'a OpenGLVertexBuffer {
         self.vertex_buffers.push((buffer, layout.to_vec()));
 
         let mut stride = 0;
@@ -93,6 +93,8 @@ impl OpenGLVertexArray {
         }
 
         self.un_bind();
+        
+        return &self.vertex_buffers.last().unwrap().0;
     }
 
     pub fn bind(&self) {

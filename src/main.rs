@@ -60,14 +60,15 @@ void main() {
 "#;
 
     let shader = OpenGLShader::new(vertex_shader_source, fragment_shader_source);
+
+    let mut vertex_array = OpenGLVertexArray::new();
+
     let vertices = [
         Vertex::new(Vector3::new( 0.0,  0.5, 0.0)),
         Vertex::new(Vector3::new( 0.5, -0.5, 0.0)),
         Vertex::new(Vector3::new(-0.5, -0.5, 0.0)),
     ];
-
-    let mut vertex_array = OpenGLVertexArray::new();
-    vertex_array.add_vertex_buffer(OpenGLVertexBuffer::new(&vertices), &[BufferElement::Float3]);
+    let _vertex_buffer = vertex_array.add_vertex_buffer(OpenGLVertexBuffer::new(&vertices), &[BufferElement::Float3]);
 
     let indices: [u32; 3] = [
         0, 1, 2,
