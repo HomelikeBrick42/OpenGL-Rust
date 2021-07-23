@@ -29,6 +29,7 @@ fn main() {
 
     glfw.window_hint(glfw::WindowHint::ContextVersion(4, 4));
     glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+    glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
     let (mut window, events) = glfw.create_window(1280, 720, "Rust OpenGL Window", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window!");
@@ -70,7 +71,7 @@ void main() {
     ];
     let _vertex_buffer = vertex_array.add_vertex_buffer(OpenGLVertexBuffer::new(&vertices), &[BufferElement::Float3]);
 
-    let indices: [u32; 3] = [
+    let indices = [
         0, 1, 2,
     ];
     let index_buffer = OpenGLIndexBuffer::new(&indices);
