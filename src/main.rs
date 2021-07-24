@@ -47,6 +47,13 @@ fn main() {
 
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
+    unsafe {
+        gl::Enable(gl::DEPTH_TEST);
+
+        gl::Enable(gl::BLEND);
+        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+    }
+
     let shader = OpenGLShader::new(include_str!("../texture.vert.glsl"), include_str!("../texture.frag.glsl"));
 
     let mut vertex_array = OpenGLVertexArray::new();
