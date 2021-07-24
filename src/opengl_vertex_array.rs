@@ -1,7 +1,6 @@
 use crate::opengl_vertex_buffer::{ OpenGLVertexBuffer };
 
 use gl::types::*;
-use std::os::raw::{ c_void };
 
 #[derive(Clone, Copy)]
 pub enum BufferElement {
@@ -83,7 +82,7 @@ impl OpenGLVertexArray {
                         element.get_gl_type(),
                         gl::FALSE,
                         stride as GLsizei,
-                        offset as *const c_void,
+                        offset as *const GLvoid,
                     );
                 }
                 index += 1;

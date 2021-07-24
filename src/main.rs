@@ -1,25 +1,31 @@
 #![allow(dead_code)]
 
 mod vector3;
+mod vector2;
 mod vertex;
 mod opengl_shader;
 mod opengl_vertex_buffer;
 mod opengl_vertex_array;
 mod opengl_index_buffer;
+mod opengl_texture;
 
+use crate::vector2::{ Vector2 };
 use crate::vector3::{ Vector3 };
 use crate::vertex::{ Vertex };
 use crate::opengl_shader::{ OpenGLShader };
 use crate::opengl_vertex_buffer::{ OpenGLVertexBuffer };
 use crate::opengl_vertex_array::{ OpenGLVertexArray, BufferElement };
 use crate::opengl_index_buffer::{ OpenGLIndexBuffer };
+use crate::opengl_texture::{ OpenGLTexture };
 
 extern crate glfw;
 extern crate gl;
 extern crate num;
+extern crate image;
 
 use glfw::{ Context, Key, Action };
 use gl::types::*;
+use image::GenericImageView;
 
 use std::sync::mpsc::{ Receiver };
 
@@ -29,7 +35,6 @@ fn main() {
 
     glfw.window_hint(glfw::WindowHint::ContextVersion(4, 4));
     glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
-    glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
     let (mut window, events) = glfw.create_window(1280, 720, "Rust OpenGL Window", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window!");
@@ -38,14 +43,20 @@ fn main() {
     window.set_key_polling(true);
     window.set_framebuffer_size_polling(true);
 
+    glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
+
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
     let vertex_shader_source: &str = r#"
 #version 440 core
 
 layout(location = 0) in vec4 a_Position;
+layout(location = 1) in vec2 a_TexCoord;
+
+layout(location = 0) out vec2 v_TexCoord;
 
 void main() {
+    v_TexCoord = a_TexCoord;
     gl_Position = a_Position;
 }
 "#;
@@ -55,8 +66,12 @@ void main() {
 
 layout(location = 0) out vec4 o_Color;
 
+layout(location = 0) in vec2 v_TexCoord;
+
+uniform sampler2D u_Texture;
+
 void main() {
-    o_Color = vec4(1.0, 0.0, 0.0, 1.0);
+    o_Color = texture(u_Texture, v_TexCoord);
 }
 "#;
 
@@ -65,16 +80,22 @@ void main() {
     let mut vertex_array = OpenGLVertexArray::new();
 
     let vertices = [
-        Vertex::new(Vector3::new( 0.0,  0.5, 0.0)),
-        Vertex::new(Vector3::new( 0.5, -0.5, 0.0)),
-        Vertex::new(Vector3::new(-0.5, -0.5, 0.0)),
+        Vertex::new(Vector3::new(-0.5,  0.5, 0.0), Vector2::new(0.0, 1.0)),
+        Vertex::new(Vector3::new( 0.5,  0.5, 0.0), Vector2::new(1.0, 1.0)),
+        Vertex::new(Vector3::new( 0.5, -0.5, 0.0), Vector2::new(1.0, 0.0)),
+        Vertex::new(Vector3::new(-0.5, -0.5, 0.0), Vector2::new(0.0, 0.0)),
     ];
-    let _vertex_buffer = vertex_array.add_vertex_buffer(OpenGLVertexBuffer::new(&vertices), &[BufferElement::Float3]);
+    let _vertex_buffer = vertex_array.add_vertex_buffer(OpenGLVertexBuffer::new(&vertices), &[BufferElement::Float3, BufferElement::Float2]);
 
     let indices = [
         0, 1, 2,
+        0, 2, 3,
     ];
     let index_buffer = OpenGLIndexBuffer::new(&indices);
+
+    let cat_image = image::load_from_memory(include_bytes!("../cat.jpg"))
+        .expect("Failed to read image!");
+    let texture = OpenGLTexture::new(&cat_image.flipv().to_rgba8().into_raw(), cat_image.width(), cat_image.height());
 
     while !window.should_close() {
         process_window_events(&mut window, &events);
@@ -85,6 +106,10 @@ void main() {
         }
 
         shader.bind();
+
+        shader.set_integer("u_Texture", 0);
+        texture.bind(0);
+
         vertex_array.bind();
         index_buffer.bind();
         unsafe {

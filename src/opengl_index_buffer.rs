@@ -1,5 +1,4 @@
 use gl::types::*;
-use std::os::raw::{ c_void };
 
 pub struct OpenGLIndexBuffer {
     id: GLuint,
@@ -14,7 +13,7 @@ impl OpenGLIndexBuffer {
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
                 (data.len() * std::mem::size_of::<u32>()) as GLsizeiptr,
-                &data[0] as *const u32 as *const c_void,
+                &data[0] as *const u32 as *const GLvoid,
                 gl::STATIC_DRAW,
             );
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
@@ -31,7 +30,7 @@ impl OpenGLIndexBuffer {
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
                 (data.len() * std::mem::size_of::<u32>()) as GLsizeiptr,
-                &data[0] as *const u32 as *const c_void,
+                &data[0] as *const u32 as *const GLvoid,
                 gl::STATIC_DRAW,
             );
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);

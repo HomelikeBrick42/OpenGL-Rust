@@ -1,5 +1,4 @@
 use gl::types::*;
-use std::os::raw::{ c_void };
 
 pub struct OpenGLVertexBuffer {
     id: GLuint,
@@ -14,7 +13,7 @@ impl OpenGLVertexBuffer {
             gl::BufferData(
                 gl::ARRAY_BUFFER,
                 (data.len() * std::mem::size_of_val(&data[0])) as GLsizeiptr,
-                &data[0] as *const T as *const c_void,
+                &data[0] as *const T as *const GLvoid,
                 gl::STATIC_DRAW,
             );
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -31,7 +30,7 @@ impl OpenGLVertexBuffer {
             gl::BufferData(
                 gl::ARRAY_BUFFER,
                 (data.len() * std::mem::size_of_val(&data[0])) as GLsizeiptr,
-                &data[0] as *const T as *const c_void,
+                &data[0] as *const T as *const GLvoid,
                 gl::DYNAMIC_DRAW,
             );
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);

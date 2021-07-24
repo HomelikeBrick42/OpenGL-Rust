@@ -48,6 +48,15 @@ impl OpenGLShader {
         unsafe { gl::UseProgram(0); }
     }
 
+    pub fn set_integer(&self, name: &str, value: i32) {
+        unsafe {
+            let location = gl::GetUniformLocation(self.id, name.as_ptr() as *const _);
+            if location != -1 {
+                gl::ProgramUniform1i(self.id, location, value);
+            }
+        }
+    }
+
     unsafe fn create_shader(shader_source: &str, shader_type: GLenum) -> GLuint {
         let shader = gl::CreateShader(shader_type);
         let c_string_shader_source = CString::new(shader_source.as_bytes()).unwrap();
