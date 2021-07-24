@@ -47,35 +47,7 @@ fn main() {
 
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    let vertex_shader_source: &str = r#"
-#version 440 core
-
-layout(location = 0) in vec4 a_Position;
-layout(location = 1) in vec2 a_TexCoord;
-
-layout(location = 0) out vec2 v_TexCoord;
-
-void main() {
-    v_TexCoord = a_TexCoord;
-    gl_Position = a_Position;
-}
-"#;
-
-    let fragment_shader_source: &str = r#"
-#version 440 core
-
-layout(location = 0) out vec4 o_Color;
-
-layout(location = 0) in vec2 v_TexCoord;
-
-uniform sampler2D u_Texture;
-
-void main() {
-    o_Color = texture(u_Texture, v_TexCoord);
-}
-"#;
-
-    let shader = OpenGLShader::new(vertex_shader_source, fragment_shader_source);
+    let shader = OpenGLShader::new(include_str!("../texture.vert.glsl"), include_str!("../texture.frag.glsl"));
 
     let mut vertex_array = OpenGLVertexArray::new();
 
